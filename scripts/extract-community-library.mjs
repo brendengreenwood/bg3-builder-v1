@@ -3,7 +3,7 @@
  * BG3 Community Library extractor (no external deps; Node ESM)
  *
  * Usage:
- *   node scripts/extract-community-library.mjs --src "path/to/CommunityLibrary_extracted" --out "data/json/community"
+ *   node scripts/extract-community-library.mjs --src "path/to/CommunityLibrary_extracted" --out "public/data/community"
  *
  * Notes:
  * - Expects an UNPACKED CommunityLibrary directory (PAK -> folder)
@@ -11,8 +11,8 @@
  * - This parses the Stats KV format into JSON. Localization (DisplayName/Description) is not resolved here; we keep raw keys/handles.
  * - Output: separate JSON files for spells, passives, statuses, items.
  */
-import fs from 'node:fs';
-import path from 'node:path';
+import fs from "node:fs";
+import path from "node:path";
 
 const args = process.argv.slice(2);
 function getArg(name, def = undefined) {
@@ -21,12 +21,16 @@ function getArg(name, def = undefined) {
   return def;
 }
 
-const SRC = getArg('--src');
-const OUT = getArg('--out', 'data/json/community');
+const SRC = getArg("--src");
+const OUT = getArg("--out", "public/data/community");
 
 if (!SRC) {
-  console.error('[extract] Missing --src path to extracted Community Library directory.');
-  console.error('Example: npm run extract:community -- --src "C:/mods/CommunityLibrary" --out "data/json/community"');
+  console.error(
+    "[extract] Missing --src path to extracted Community Library directory."
+  );
+  console.error(
+    'Example: npm run extract:community -- --src "C:/mods/CommunityLibrary" --out "public/data/community"'
+  );
   process.exit(1);
 }
 
@@ -61,7 +65,7 @@ const USING_RE = /^\s*using\s+"([^"]+)"/i;
 const DATA_RE = /^\s*data\s+"([^"]+)"\s+"([\s\S]*)"\s*$/i;
 
 function parseStatsFile(filePath) {
-  const text = fs.readFileSync(filePath, 'utf8');
+  const text = fs.readFileSync(filePath, "utf8");
   const lines = text.split(/\r?\n/);
   const entries = [];
   let current = null;
@@ -75,7 +79,7 @@ function parseStatsFile(filePath) {
 
   for (let raw of lines) {
     const line = raw.trim();
-    if (!line || line.startsWith('//')) {
+    if (!line || line.startsWith("//")) {
       // blank or comment separates blocks
       continue;
     }
@@ -103,7 +107,7 @@ function parseStatsFile(filePath) {
     const mData = line.match(DATA_RE);
     if (mData) {
       const key = mData[1];
-      const value = mData[2].replace(/"\s*$/,''); // defensive trim of trailing quote if any anomalies
+      const value = mData[2].replace(/"\s*$/, ""); // defensive trim of trailing quote if any anomalies
       // Allow repeated keys -> store as array
       if (current.data[key] === undefined) {
         current.data[key] = value;
@@ -121,8 +125,8 @@ function parseStatsFile(filePath) {
 }
 
 function collectStatsEntries(statsRoot) {
-  const dataRoot = path.join(statsRoot, 'Stats', 'Generated', 'Data');
-  const files = walkDir(dataRoot, p => p.toLowerCase().endsWith('.txt'));
+  const dataRoot = path.join(statsRoot, "Stats", "Generated", "Data");
+  const files = walkDir(dataRoot, (p) => p.toLowerCase().endsWith(".txt"));
   const all = [];
   for (const f of files) {
     try {
@@ -147,8 +151,10 @@ function partitionByType(entries) {
 function writeJSON(outDir, name, obj) {
   ensureDir(outDir);
   const p = path.join(outDir, name);
-  fs.writeFileSync(p, JSON.stringify(obj, null, 2), 'utf8');
-  console.log(`[extract] Wrote ${name} (${Array.isArray(obj) ? obj.length : 'object'})`);
+  fs.writeFileSync(p, JSON.stringify(obj, null, 2), "utf8");
+  console.log(
+    `[extract] Wrote ${name} (${Array.isArray(obj) ? obj.length : "object"})`
+  );
 }
 
 (function main() {
@@ -160,29 +166,29 @@ function writeJSON(outDir, name, obj) {
   const byType = partitionByType(all);
 
   // Core domains
-  const spells = byType.get('SpellData') || [];
-  const passives = byType.get('PassiveData') || [];
-  const statuses = byType.get('StatusData') || [];
-  const weapons = byType.get('Weapon') || [];
-  const armors = byType.get('Armor') || [];
-  const objects = byType.get('Object') || [];
+  const spells = byType.get("SpellData") || [];
+  const passives = byType.get("PassiveData") || [];
+  const statuses = byType.get("StatusData") || [];
+  const weapons = byType.get("Weapon") || [];
+  const armors = byType.get("Armor") || [];
+  const objects = byType.get("Object") || [];
 
   // Simple items array: merge weapon/armor/object; tag kind
   const items = [
-    ...weapons.map(e => ({ ...e, kind: 'Weapon' })),
-    ...armors.map(e => ({ ...e, kind: 'Armor' })),
-    ...objects.map(e => ({ ...e, kind: 'Object' })),
+    ...weapons.map((e) => ({ ...e, kind: "Weapon" })),
+    ...armors.map((e) => ({ ...e, kind: "Armor" })),
+    ...objects.map((e) => ({ ...e, kind: "Object" })),
   ];
 
   // Write outputs
-  writeJSON(outRoot, 'spells.json', spells);
-  writeJSON(outRoot, 'passives.json', passives);
-  writeJSON(outRoot, 'statuses.json', statuses);
-  writeJSON(outRoot, 'items.json', items);
+  writeJSON(outRoot, "spells.json", spells);
+  writeJSON(outRoot, "passives.json", passives);
+  writeJSON(outRoot, "statuses.json", statuses);
+  writeJSON(outRoot, "items.json", items);
 
   // Metadata summary
   const summary = {
-    source: 'BG3-Community-Library',
+    source: "BG3-Community-Library",
     extractedAt: new Date().toISOString(),
     counts: {
       totalEntries: all.length,
@@ -190,11 +196,12 @@ function writeJSON(outDir, name, obj) {
       passives: passives.length,
       statuses: statuses.length,
       items: items.length,
-      byType: Object.fromEntries([...byType.entries()].map(([k,v]) => [k, v.length]))
-    }
+      byType: Object.fromEntries(
+        [...byType.entries()].map(([k, v]) => [k, v.length])
+      ),
+    },
   };
-  writeJSON(outRoot, 'summary.json', summary);
+  writeJSON(outRoot, "summary.json", summary);
 
-  console.log('[extract] Done.');
+  console.log("[extract] Done.");
 })();
-

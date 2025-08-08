@@ -8,7 +8,9 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "extract:community": "node scripts/extract-community-library.mjs"
+    "extract:community": "node scripts/extract-community-library.mjs",
+    "extract:vanilla": "node scripts/extract-vanilla.mjs",
+    "resolve:loc": "node scripts/resolve-localization.mjs"
   },
   "dependencies": {
     "lucide-react": "^0.344.0",
